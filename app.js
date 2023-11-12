@@ -8,7 +8,7 @@ const router = require('./routes');
 const app = express();
 
 const dirname = path.resolve();
-const { PORT, MONGO_URL } = process.env;
+const { PORT = 3000, MONGO_URL = 'mongodb://localhost:27017/mestodb' } = process.env;
 
 mongoose.connect(MONGO_URL);
 
