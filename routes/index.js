@@ -18,6 +18,7 @@ router.use((err, req, res, next) => {
   res.json({
     message: err.message,
   });
+  next();
 });
 
 module.exports = router;
