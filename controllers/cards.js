@@ -56,9 +56,10 @@ const createCard = async (req, res) => {
 
 const likeCard = async (req, res) => {
   try {
-    console.log(req.params.cardId);
-    console.log(req.user._id);
-    console.log(await card.findById(req.params.cardId));
+    const foundCard = await card.findById(req.params.cardId);
+    if (!foundCard) {
+      throw new Error('NotFound');
+    }
     await card.findByIdAndUpdate(
       req.params.cardId,
       { $addToSet: { likes: req.user._id } },
@@ -66,10 +67,8 @@ const likeCard = async (req, res) => {
     );
     return res.status(201).send(await card.findByIdAndUpdate(req.params.cardId));
   } catch (error) {
-    if (error.name === 'ValidationError') {
-      return res
-        .status(ERROR_CODE_VALIDATION)
-        .send({ message: 'Ошибка валидации полей', ...error });
+    if (error.name === 'CastError') {
+      return res.status(ERROR_CODE_VALIDATION).send({ message: 'Передан не валидный id' });
     }
     if (error.message === 'NotFound') {
       return res.status(ERROR_CODE_NOT_FOUND).send({ message: 'Карточка по id не найдена' });
@@ -81,15 +80,19 @@ const likeCard = async (req, res) => {
 
 const dislikeCard = async (req, res) => {
   try {
+    const foundCard = await card.findById(req.params.cardId);
+    if (!foundCard) {
+      throw new Error('NotFound');
+    }
     await card.findByIdAndUpdate(
       req.params.cardId,
       { $pull: { likes: req.user._id } },
       { new: true },
     );
-    return res.status(201).send(await card.findById(req.params.cardId));
+    return res.status(200).send(await card.findById(req.params.cardId));
   } catch (error) {
-    if (error.name === 'ValidationError') {
-      return res.status(ERROR_CODE_VALIDATION).send({ message: 'Ошибка валидации полей', ...error });
+    if (error.name === 'CastError') {
+      return res.status(ERROR_CODE_VALIDATION).send({ message: 'Передан не валидный id' });
     }
     if (error.message === 'NotFound') {
       return res.status(ERROR_CODE_NOT_FOUND).send({ message: 'Карточка по id не найдена' });

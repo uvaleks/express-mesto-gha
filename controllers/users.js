@@ -64,7 +64,7 @@ const updateProfile = async (req, res) => {
     if (update.about) {
       foundUser.about = update.about;
     }
-    return res.status(201).send(await foundUser.save());
+    return res.status(200).send(await foundUser.save());
   } catch (error) {
     if (error.name === 'ValidationError') {
       return res.status(ERROR_CODE_VALIDATION).send({ message: 'Ошибка валидации полей', ...error });
@@ -87,7 +87,7 @@ const updateAvatar = async (req, res) => {
     if (update.avatar) {
       foundUser.avatar = update.avatar;
     }
-    return res.status(201).send(await foundUser.save());
+    return res.status(200).send(await foundUser.save());
   } catch (error) {
     if (error.name === 'ValidationError') {
       return res.status(ERROR_CODE_VALIDATION).send({ message: 'Ошибка валидации полей', ...error });
