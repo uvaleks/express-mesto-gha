@@ -3,14 +3,12 @@ const card = require('../models/card');
 const ERROR_CODE_VALIDATION = 400;
 const ERROR_CODE_NOT_FOUND = 404;
 const ERROR_CODE_DEFAULT = 500;
-const ERROR_CODE_DUPLICATE_MONGO = 11000;
 
 const getCards = async (req, res) => {
   try {
     const cards = await card.find({});
     return res.status(200).send(cards);
   } catch (error) {
-    console.log(error);
     return res.status(ERROR_CODE_DEFAULT).send({ message: 'Ошибка на стороне севера' });
   }
 };
@@ -30,7 +28,6 @@ const deleteCardById = async (req, res) => {
     if (error.name === 'CastError') {
       return res.status(ERROR_CODE_VALIDATION).send({ message: 'Передан не валидный id' });
     }
-    console.log(error);
     return res.status(ERROR_CODE_DEFAULT).send({ message: 'Ошибка на стороне сервера' });
   }
 };
@@ -45,27 +42,21 @@ const createCard = async (req, res) => {
     if (error.name === 'ValidationError') {
       return res.status(ERROR_CODE_VALIDATION).send({ message: 'Ошибка валидации полей', ...error });
     }
-
-    if (error.code === ERROR_CODE_DUPLICATE_MONGO) {
-      return res.status(409).send({ message: 'Карточка уже существует' });
-    }
-    console.log(error);
     return res.status(ERROR_CODE_DEFAULT).send({ message: 'Ошибка на стороне сервера' });
   }
 };
 
 const likeCard = async (req, res) => {
   try {
-    const foundCard = await card.findById(req.params.cardId);
-    if (!foundCard) {
-      throw new Error('NotFound');
-    }
-    await card.findByIdAndUpdate(
+    const updatedCard = await card.findByIdAndUpdate(
       req.params.cardId,
       { $addToSet: { likes: req.user._id } },
       { new: true },
     );
-    return res.status(201).send(await card.findByIdAndUpdate(req.params.cardId));
+    if (!updatedCard) {
+      throw new Error('NotFound');
+    }
+    return res.status(200).send(updatedCard);
   } catch (error) {
     if (error.name === 'CastError') {
       return res.status(ERROR_CODE_VALIDATION).send({ message: 'Передан не валидный id' });
@@ -73,7 +64,6 @@ const likeCard = async (req, res) => {
     if (error.message === 'NotFound') {
       return res.status(ERROR_CODE_NOT_FOUND).send({ message: 'Карточка по id не найдена' });
     }
-    console.log(error);
     return res.status(ERROR_CODE_DEFAULT).send({ message: 'Ошибка на стороне сервера' });
   }
 };
@@ -97,7 +87,6 @@ const dislikeCard = async (req, res) => {
     if (error.message === 'NotFound') {
       return res.status(ERROR_CODE_NOT_FOUND).send({ message: 'Карточка по id не найдена' });
     }
-    console.log(error);
     return res.status(ERROR_CODE_DEFAULT).send({ message: 'Ошибка на стороне сервера' });
   }
 };
