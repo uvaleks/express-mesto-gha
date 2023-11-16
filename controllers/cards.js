@@ -70,16 +70,15 @@ const likeCard = async (req, res) => {
 
 const dislikeCard = async (req, res) => {
   try {
-    const foundCard = await card.findById(req.params.cardId);
-    if (!foundCard) {
-      throw new Error('NotFound');
-    }
-    await card.findByIdAndUpdate(
+    const updatedCard = await card.findByIdAndUpdate(
       req.params.cardId,
       { $pull: { likes: req.user._id } },
       { new: true },
     );
-    return res.status(200).send(await card.findById(req.params.cardId));
+    if (!updatedCard) {
+      throw new Error('NotFound');
+    }
+    return res.status(200).send(updatedCard);
   } catch (error) {
     if (error.name === 'CastError') {
       return res.status(ERROR_CODE_VALIDATION).send({ message: 'Передан не валидный id' });

@@ -56,7 +56,7 @@ const updateProfile = async (req, res) => {
     }
     return res.status(200).send(updatedUser);
   } catch (error) {
-    if (error.name === 'ValidationError') {
+    if (error.name === 'CastError') {
       return res.status(ERROR_CODE_VALIDATION).send({ message: 'Ошибка валидации полей', ...error });
     }
     if (error.message === 'NotFound') {
@@ -78,7 +78,7 @@ const updateAvatar = async (req, res) => {
     }
     return res.status(200).send(updatedUser);
   } catch (error) {
-    if (error.name === 'ValidationError') {
+    if (error.name === 'CastError') {
       return res.status(ERROR_CODE_VALIDATION).send({ message: 'Ошибка валидации полей', ...error });
     }
     if (error.message === 'NotFound') {
