@@ -46,15 +46,18 @@ const createUser = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const updatedUser = await user.findByIdAndUpdate(
-      req.user._id,
-      req.body,
-      { new: true },
-    );
-    if (!updatedUser) {
+    const update = req.body;
+    const foundUser = await user.findById(req.user._id);
+    if (!foundUser) {
       throw new Error('NotFound');
     }
-    return res.status(200).send(updatedUser);
+    if (update.name) {
+      foundUser.name = update.name;
+    }
+    if (update.about) {
+      foundUser.about = update.about;
+    }
+    return res.status(200).send(await foundUser.save());
   } catch (error) {
     if (error.name === 'ValidationError') {
       return res.status(ERROR_CODE_VALIDATION).send({ message: 'Ошибка валидации полей', ...error });
@@ -68,15 +71,15 @@ const updateProfile = async (req, res) => {
 
 const updateAvatar = async (req, res) => {
   try {
-    const updatedUser = await user.findByIdAndUpdate(
-      req.user._id,
-      req.body,
-      { new: true },
-    );
-    if (!updatedUser) {
+    const update = req.body;
+    const foundUser = await user.findById(req.user._id);
+    if (!foundUser) {
       throw new Error('NotFound');
     }
-    return res.status(200).send(updatedUser);
+    if (update.avatar) {
+      foundUser.avatar = update.avatar;
+    }
+    return res.status(200).send(await foundUser.save());
   } catch (error) {
     if (error.name === 'ValidationError') {
       return res.status(ERROR_CODE_VALIDATION).send({ message: 'Ошибка валидации полей', ...error });
