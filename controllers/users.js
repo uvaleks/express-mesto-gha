@@ -1,3 +1,4 @@
+const bcrypt = require('bcryptjs');
 const user = require('../models/user');
 
 const ERROR_CODE_VALIDATION = 400;
@@ -33,6 +34,11 @@ const getUserById = async (req, res) => {
 };
 
 const createUser = async (req, res) => {
+  bcrypt.hash(req.body.password, 10)
+    .then((hash) => {
+      req.body.password = hash;
+    })
+    .catch((err) => res.status(400).send(err));
   try {
     const newUser = user(req.body);
     return res.status(201).send(await newUser.save());
