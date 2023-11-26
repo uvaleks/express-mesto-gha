@@ -2,7 +2,7 @@ const express = require('express');
 const { json } = require('express');
 const mongoose = require('mongoose');
 require('dotenv').config();
-const { celebrate, Joi } = require('celebrate');
+const { celebrate, Joi, errors } = require('celebrate');
 const {
   login,
   createUser,
@@ -17,6 +17,8 @@ const { PORT, MONGO_URL = 'mongodb://localhost:27017/mestodb' } = process.env;
 mongoose.connect(MONGO_URL);
 
 app.use(json());
+
+app.use(errors());
 
 app.post('/signin', celebrate({
   body: Joi.object().keys({
