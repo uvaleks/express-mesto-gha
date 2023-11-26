@@ -1,7 +1,12 @@
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const cookie = require('cookie');
 const user = require('../models/user');
 
+const { JWT_SECRET } = process.env;
+
 const ERROR_CODE_VALIDATION = 400;
+const ERROR_CODE_UNAUTHORIZED = 401;
 const ERROR_CODE_NOT_FOUND = 404;
 const ERROR_CODE_DEFAULT = 500;
 
@@ -33,21 +38,82 @@ const getUserById = async (req, res) => {
   }
 };
 
-const createUser = async (req, res) => {
+const getUser = (req, res) => {
+  const { token } = req.body;
+  user.findOne({ token })
+    .then((foundUser) => {
+      console.log('foundUser = ', foundUser);
+      if (!foundUser) {
+        throw new Error('NotFound');
+      }
+      res.status(200).send(foundUser);
+    })
+    .catch((error) => {
+      if (error.message === 'NotFound') {
+        return res.status(ERROR_CODE_NOT_FOUND).send({ message: 'Пользователь по id не найден' });
+      }
+      return res.status(ERROR_CODE_DEFAULT).send({ message: 'Ошибка на стороне севера' });
+    });
+};
+
+const createUser = (req, res) => {
   bcrypt.hash(req.body.password, 10)
     .then((hash) => {
       req.body.password = hash;
+      return user.create(req.body);
     })
-    .catch((err) => res.status(400).send(err));
-  try {
-    const newUser = user(req.body);
-    return res.status(201).send(await newUser.save());
-  } catch (error) {
-    if (error.name === 'ValidationError') {
-      return res.status(ERROR_CODE_VALIDATION).send({ message: 'Ошибка валидации полей', ...error });
-    }
-    return res.status(ERROR_CODE_DEFAULT).send({ message: 'Ошибка на стороне севера' });
-  }
+    .then((createdUser) => res.status(201).send(createdUser))
+    .catch((error) => {
+      if (error.name === 'ValidationError') {
+        return res.status(ERROR_CODE_VALIDATION).send({ message: 'Ошибка валидации полей', ...error });
+      }
+      return res.status(ERROR_CODE_DEFAULT).send({ message: 'Ошибка на стороне севера' });
+    });
+};
+
+const login = (req, res) => {
+  const { email, password } = req.body;
+  user.findOne({ email }).select('+password')
+    .then((foundUser) => {
+      console.log('foundUser = ', foundUser);
+      if (!foundUser) {
+        return Promise.reject(new Error('Неправильные почта или пароль'));
+      }
+      console.log('password = ', password);
+      console.log('foundUser.password = ', foundUser.password);
+      return bcrypt.compare(password, foundUser.password)
+        .then((matched) => {
+          console.log('matched = ', matched);
+          if (!matched) {
+            return Promise.reject(new Error('Неправильные почта или пароль'));
+          }
+
+          console.log('foundUser._id = ', { _id: foundUser._id.toString() });
+
+          const token = jwt.sign(
+            { _id: foundUser._id.toString() },
+            JWT_SECRET,
+            { expiresIn: '7d' },
+          );
+
+          console.log('token = ', token);
+
+          res.setHeader('Set-Cookie', cookie.serialize('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 60 * 60 * 24 * 7,
+            path: '/',
+          }));
+
+          return res.status(200).send({ message: 'Всё верно!' });
+        });
+    })
+    .catch((err) => {
+      res
+        .status(ERROR_CODE_UNAUTHORIZED)
+        .send({ message: err.message });
+    });
 };
 
 const updateProfile = async (req, res) => {
@@ -98,9 +164,11 @@ const updateAvatar = async (req, res) => {
 };
 
 module.exports = {
+  login,
   createUser,
   getUserById,
   getUsers,
+  getUser,
   updateProfile,
   updateAvatar,
 };
