@@ -2,6 +2,7 @@ const express = require('express');
 const { json } = require('express');
 const mongoose = require('mongoose');
 require('dotenv').config();
+const { celebrate, Joi } = require('celebrate');
 const {
   login,
   createUser,
@@ -17,16 +18,21 @@ mongoose.connect(MONGO_URL);
 
 app.use(json());
 
-// app.use((req, res, next) => {
-//   req.user = {
-//     _id: '654fc6cb2cf78115785ca09d',
-//   };
-
-//   next();
-// });
-
-app.post('/signin', login);
-app.post('/signup', createUser);
+app.post('/signin', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().email({ tlds: { allow: false } }).required(),
+    password: Joi.string().required(),
+  }),
+}), login);
+app.post('/signup', celebrate({
+  body: Joi.object().keys({
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+    avatar: Joi.string().min(2).max(30),
+    email: Joi.string().email({ tlds: { allow: false } }).required(),
+    password: Joi.string().required(),
+  }),
+}), createUser);
 
 app.use(auth);
 
