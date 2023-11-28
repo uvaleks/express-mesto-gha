@@ -8,6 +8,7 @@ const { JWT_SECRET } = process.env;
 const ERROR_CODE_VALIDATION = 400;
 const ERROR_CODE_UNAUTHORIZED = 401;
 const ERROR_CODE_NOT_FOUND = 404;
+const ERROR_CODE_CONFLICT = 409;
 const ERROR_CODE_DEFAULT = 500;
 
 const getUsers = async (req, res) => {
@@ -60,10 +61,26 @@ const createUser = (req, res) => {
   bcrypt.hash(req.body.password, 10)
     .then((hash) => {
       req.body.password = hash;
+      const { email } = req.body;
+      return user.findOne({ email });
+    })
+    .then((foundUser) => {
+      console.log('foundUser', foundUser);
+      if (foundUser) {
+        // throw new Error('Conflict');
+        return Promise.reject(new Error('Conflict'));
+      }
       return user.create(req.body);
     })
-    .then((createdUser) => res.status(201).send(createdUser))
+    .then((createdUser) => {
+      const { email } = createdUser;
+      return user.findOne({ email });
+    })
+    .then((foundUser) => res.status(201).send(foundUser))
     .catch((error) => {
+      if (error.message === 'Conflict') {
+        return res.status(ERROR_CODE_CONFLICT).send({ message: 'Пользователь с таким email уже существует' });
+      }
       if (error.name === 'ValidationError') {
         return res.status(ERROR_CODE_VALIDATION).send({ message: 'Ошибка валидации полей', ...error });
       }
