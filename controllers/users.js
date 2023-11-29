@@ -40,10 +40,10 @@ const getUserById = async (req, res) => {
 };
 
 const getUser = (req, res) => {
-  const { token } = req.body;
-  user.findOne({ token })
+  const { _id } = req.user;
+  console.log(_id);
+  user.findOne({ _id })
     .then((foundUser) => {
-      console.log('foundUser = ', foundUser);
       if (!foundUser) {
         throw new Error('NotFound');
       }
@@ -65,7 +65,6 @@ const createUser = (req, res) => {
       return user.findOne({ email });
     })
     .then((foundUser) => {
-      console.log('foundUser', foundUser);
       if (foundUser) {
         // throw new Error('Conflict');
         return Promise.reject(new Error('Conflict'));
@@ -92,15 +91,11 @@ const login = (req, res) => {
   const { email, password } = req.body;
   user.findOne({ email }).select('+password')
     .then((foundUser) => {
-      console.log('foundUser = ', foundUser);
       if (!foundUser) {
         return Promise.reject(new Error('Неправильные почта или пароль'));
       }
-      console.log('password = ', password);
-      console.log('foundUser.password = ', foundUser.password);
       return bcrypt.compare(password, foundUser.password)
         .then((matched) => {
-          console.log('matched = ', matched);
           if (!matched) {
             return Promise.reject(new Error('Неправильные почта или пароль'));
           }
