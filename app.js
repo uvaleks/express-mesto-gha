@@ -10,8 +10,6 @@ const {
 const auth = require('./middlewares/auth');
 const router = require('./routes');
 
-const urlRegex = /^((http|https):\/\/)?(www\.)?[a-z0-9]+\.[a-z]{2,}(\.[a-z]{2,})?$/;
-
 const app = express();
 
 const { PORT, MONGO_URL = 'mongodb://localhost:27017/mestodb' } = process.env;
@@ -30,7 +28,9 @@ app.post('/signup', celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    avatar: Joi.string().regex(urlRegex),
+    avatar: Joi.string().uri({
+      scheme: [/https?/],
+    }),
     email: Joi.string().email({ tlds: { allow: false } }).required(),
     password: Joi.string().required(),
   }),
