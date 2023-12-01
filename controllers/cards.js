@@ -1,6 +1,7 @@
 const card = require('../models/card');
 
 const ERROR_CODE_VALIDATION = 400;
+const ERROR_CODE_NOT_FORBIDDEN = 403;
 const ERROR_CODE_NOT_FOUND = 404;
 const ERROR_CODE_DEFAULT = 500;
 
@@ -13,23 +14,41 @@ const getCards = async (req, res) => {
   }
 };
 
-const deleteCardById = async (req, res) => {
-  try {
-    const { cardId } = req.params;
-    const foundCard = await card.findByIdAndDelete(cardId);
-    if (!foundCard) {
-      throw new Error('NotFound');
-    }
-    return res.status(200).send(foundCard);
-  } catch (error) {
-    if (error.message === 'NotFound') {
-      return res.status(ERROR_CODE_NOT_FOUND).send({ message: 'Карточка по id не найдена' });
-    }
-    if (error.name === 'CastError') {
-      return res.status(ERROR_CODE_VALIDATION).send({ message: 'Передан не валидный id' });
-    }
-    return res.status(ERROR_CODE_DEFAULT).send({ message: 'Ошибка на стороне сервера' });
-  }
+const deleteCardById = (req, res) => {
+  const _id = req.params.cardId;
+  const userId = req.user._id;
+  console.log('cardId', _id);
+  console.log('userId', userId);
+  card.findOne({ _id })
+    .then((foundCard) => {
+      console.log('foundCard', foundCard);
+      if (!foundCard) {
+        throw new Error('NotFound');
+      }
+      return foundCard;
+    })
+    .then((cardToDelete) => {
+      console.log('cardToDelete', cardToDelete);
+      const owner = cardToDelete.owner.toString();
+      console.log('owner', owner);
+      if (owner !== userId) {
+        throw new Error('Forbidden');
+      }
+      return card.findByIdAndDelete(_id);
+    })
+    .then((deletedCard) => res.status(200).send(deletedCard))
+    .catch((error) => {
+      if (error.message === 'Forbidden') {
+        return res.status(ERROR_CODE_NOT_FORBIDDEN).send({ message: 'Удаление не своих карточек запрещено' });
+      }
+      if (error.message === 'NotFound') {
+        return res.status(ERROR_CODE_NOT_FOUND).send({ message: 'Карточка по id не найдена' });
+      }
+      if (error.name === 'CastError') {
+        return res.status(ERROR_CODE_VALIDATION).send({ message: 'Передан не валидный id' });
+      }
+      return res.status(ERROR_CODE_DEFAULT).send({ message: 'Ошибка на стороне сервера' });
+    });
 };
 
 const createCard = async (req, res) => {
