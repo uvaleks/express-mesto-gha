@@ -8,6 +8,8 @@ const {
   updateAvatar,
 } = require('../controllers/users');
 
+const urlRegex = /^((http|https):\/\/)?(www\.)?[a-z0-9]+\.[a-z]{2,}(\.[a-z]{2,})?$/;
+
 const userRouter = Router();
 
 userRouter.get('/', getUsers);
@@ -25,7 +27,7 @@ userRouter.patch('/me', celebrate({
 }), updateProfile);
 userRouter.patch('/me/avatar', celebrate({
   body: Joi.object().keys({
-    avatar: Joi.string().uri(),
+    avatar: Joi.string().regex(urlRegex),
   }),
 }), updateAvatar);
 
