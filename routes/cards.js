@@ -8,15 +8,13 @@ const {
   dislikeCard,
 } = require('../controllers/cards');
 
-const urlRegex = /^((http|https):\/\/)?(www\.)?[a-z0-9]+\.[a-z]{2,}(\.[a-z]{2,})?$/;
-
 const cardRouter = Router();
 
 cardRouter.get('/', getCards);
 cardRouter.post('/', celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30).required(),
-    link: Joi.string().regex(urlRegex).required(),
+    link: Joi.string().pattern(/^https?:\/\//).required(),
   }),
 }), createCard);
 cardRouter.delete('/:cardId', celebrate({
