@@ -42,11 +42,11 @@ app.use(router);
 
 app.use(errors());
 
-app.use((err, req, res) => {
-  console.log('err = ', err);
-  console.log('err.message = ', err.message);
-  console.log('statusCode = ', err.statusCode);
-  res.status(err.statusCode).send({ message: err.message });
+app.use((err, req, res, next) => {
+  res.status(err.statusCode || 500).send({
+    message: err.message,
+  });
+  next();
 });
 
 app.listen(PORT);
