@@ -1,15 +1,13 @@
 const jwt = require('jsonwebtoken');
+const UnauthorizedError = require('../errors/unauthorized-error');
 
 const { JWT_SECRET } = process.env;
-const ERROR_CODE_UNAUTHORIZED = 401;
 
 module.exports = (req, res, next) => {
   const { cookie } = req.headers;
 
   if (!cookie || !cookie.startsWith('token=')) {
-    return res
-      .status(ERROR_CODE_UNAUTHORIZED)
-      .send({ message: 'Необходима авторизация' });
+    throw new UnauthorizedError('Неправильные почта или пароль');
   }
 
   const token = cookie.replace('token=', '');
@@ -18,9 +16,7 @@ module.exports = (req, res, next) => {
   try {
     payload = jwt.verify(token, JWT_SECRET);
   } catch (err) {
-    return res
-      .status(ERROR_CODE_UNAUTHORIZED)
-      .send({ message: 'Необходима авторизация' });
+    next(err);
   }
 
   req.user = payload;
