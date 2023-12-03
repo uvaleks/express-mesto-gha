@@ -10,7 +10,7 @@ module.exports = (req, res, next) => {
     const { cookie } = req.headers;
 
     if (!cookie || !cookie.startsWith('token=')) {
-      throw new UnauthorizedError('Неправильные почта или пароль');
+      throw new UnauthorizedError('Необходима авторизация');
     }
 
     const token = cookie.replace('token=', '');
