@@ -30,7 +30,7 @@ const deleteCardById = (req, res, next) => {
       if (owner !== userId) {
         throw new ForbiddenError('Удаление не своих карточек запрещено');
       }
-      return card.findByIdAndDelete(_id);
+      return card.deleteOne(cardToDelete);
     })
     .then((deletedCard) => res.status(200).send(deletedCard))
     .catch(next);

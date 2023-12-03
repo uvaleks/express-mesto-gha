@@ -45,13 +45,6 @@ const createUser = (req, res, next) => {
   bcrypt.hash(req.body.password, 10)
     .then((hash) => {
       req.body.password = hash;
-      const { email } = req.body;
-      return user.findOne({ email });
-    })
-    .then((foundUser) => {
-      if (foundUser) {
-        throw new ConflictError('Пользователь с таким email уже существует');
-      }
       return user.create(req.body);
     })
     .then((createdUser) => {
@@ -59,7 +52,13 @@ const createUser = (req, res, next) => {
       return user.findOne({ email });
     })
     .then((foundUser) => res.status(201).send(foundUser))
-    .catch(next);
+    .catch((err) => {
+      if (err.code === 11000) {
+        next(new ConflictError('Пользователь уже существует'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 const login = (req, res, next) => {

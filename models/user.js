@@ -25,6 +25,7 @@ const userSchema = new mongoose.Schema(
         value: true,
         message: 'Поле email является обязательным',
       },
+      unique: true,
       validate: {
         validator: (email) => validator.isEmail(email),
         message: 'Некорректный формат email',

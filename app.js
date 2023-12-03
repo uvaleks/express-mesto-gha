@@ -28,9 +28,7 @@ app.post('/signup', celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    avatar: Joi.string().uri({
-      scheme: [/https?/],
-    }),
+    avatar: Joi.string().pattern(/^(http|https):\/\/(www\.)?[\w-]+\.\w+\/?[^#\s]*/),
     email: Joi.string().email({ tlds: { allow: false } }).required(),
     password: Joi.string().required(),
   }),
@@ -43,6 +41,12 @@ app.use(router);
 app.use(errors());
 
 app.use((err, req, res, next) => {
+  if (err.code === 11000) {
+    res.status(409).send({
+      status: 409,
+      message: 'Пользователь с таким email уже существует',
+    });
+  }
   res.status(err.statusCode || 500).send({
     status: err.statusCode,
     message: err.message,
