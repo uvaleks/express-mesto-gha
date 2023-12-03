@@ -9,8 +9,8 @@ router.use('/users', userRouter);
 router.use('/cards', cardRouter);
 
 router.use((req, res, next) => {
-  const error = new NotFoundError('Неправильный путь');
-  next(error);
+  throw new NotFoundError('Неправильный путь');
+  //next(error);
 });
 
 router.use((err, req, res, next) => {
