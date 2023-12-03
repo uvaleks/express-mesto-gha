@@ -43,6 +43,9 @@ app.use(router);
 app.use(errors());
 
 app.use((err, req, res) => {
+  console.log('err = ', err);
+  console.log('err.message = ', err.message);
+  console.log('statusCode = ', err.statusCode);
   res.status(err.statusCode).send({ message: err.message });
 });
 
