@@ -13,13 +13,13 @@ router.use((req, res, next) => {
   next(err);
 });
 
-router.use((err, req, res, next) => {
-  res.status(err.status || 500);
-  res.json({
-    status: err.statusCode,
-    message: err.message,
-  });
-  next(err);
-});
+// router.use((err, req, res, next) => {
+//   res.status(err.status || 500);
+//   res.json({
+//     status: err.statusCode,
+//     message: err.message,
+//   });
+//   next(err);
+// });
 
 module.exports = router;
