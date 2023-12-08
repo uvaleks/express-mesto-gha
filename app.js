@@ -7,6 +7,7 @@ const {
   login,
   createUser,
 } = require('./controllers/users');
+const { requestLogger, errorLogger } = require('./middlewares/logger');
 const auth = require('./middlewares/auth');
 const router = require('./routes');
 
@@ -17,6 +18,8 @@ const { PORT, MONGO_URL = 'mongodb://localhost:27017/mestodb' } = process.env;
 mongoose.connect(MONGO_URL);
 
 app.use(json());
+
+app.use(requestLogger);
 
 app.post('/signin', celebrate({
   body: Joi.object().keys({
@@ -37,6 +40,8 @@ app.post('/signup', celebrate({
 app.use(auth);
 
 app.use(router);
+
+app.use(errorLogger);
 
 app.use(errors());
 
